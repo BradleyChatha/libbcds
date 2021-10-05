@@ -58,6 +58,8 @@ struct ArrayBase(
     {
         this.dtorValues(0, this._values.length);
         this.allocDtor();
+        if(this._values.ptr)
+            this.free(this._values.ptr);
     }
 
     void put(T : ValueT)(auto ref T value)
