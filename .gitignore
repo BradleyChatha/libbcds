@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/libbcds
+libbcds.so
+libbcds.dylib
+libbcds.dll
+libbcds.a
+libbcds.lib
+libbcds-test-*
+*.exe
+*.o
+*.obj
+*.lst
+*.a

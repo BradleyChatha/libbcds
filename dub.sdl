@@ -1,0 +1,16 @@
+name "libbcds"
+description "A minimal D application."
+authors "Bradley"
+copyright "Copyright © 2021, Bradley"
+license "MIT"
+configuration "default" {
+	targetType "library"
+}
+configuration "unittest" {
+	targetType "library"
+}
+configuration "betterC" {
+	targetType "library"
+	dflags "-betterC"
+    dependency "silly" version="~>1.1.1"
+}
