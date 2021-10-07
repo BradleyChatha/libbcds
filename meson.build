@@ -10,8 +10,13 @@ srcs = [
 
 include = include_directories('source/')
 
-static_library(
+libbcds = static_library(
     'bcds',
     srcs,
     include_directories: include
+)
+
+libbcds_dep = declare_dependency(
+    include_directories: include,
+    sources: srcs
 )
