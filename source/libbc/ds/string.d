@@ -2,8 +2,16 @@ module libbc.ds.string;
 
 import core.stdc.stdlib;
 
-version(X86_64){}
-else static assert(false, "libd's string is only compatible on x86_64 at the moment.");
+// version = DontUseSSO;
+version(X86_64)
+{
+    version(DontUseSSO)
+        private enum UseSSO = false;
+    else
+        private enum UseSSO = true;
+}
+else
+    private enum UseSSO = false;
 
 struct String
 {
@@ -107,7 +115,7 @@ struct String
 
         if(this.isSmall || this.isCompletelyEmpty)
         {
-            if(newLength <= this._store.smallString.length)
+            if(newLength <= this._store.smallString.length && UseSSO)
             {
                 const start = this._store.smallLength;
                 this._store.smallString[start..start + chars.length] = chars[0..$];
@@ -168,7 +176,7 @@ struct String
     {   
         if(str is null)
             this = null;
-        else if(str.length <= this._store.smallString.length)
+        else if(str.length <= this._store.smallString.length && UseSSO)
             this.setSmallString(str);
         else
             this.setBigString(str);
@@ -317,10 +325,15 @@ struct String
     @trusted
     private void setSmallString(scope const(char)[] chars)
     {
-        assert(chars.length <= this._store.smallString.length);
-        this.disposeBigStringIfExists(); // Resets us to a "completely empty" state.
-        this._store.smallString[0..chars.length] = chars[0..$];
-        this._store.smallLength = cast(ubyte)chars.length;
+        version(DontUseSSO)
+            assert(false, "This shouldn't have been called, SSO is disabled");
+        else
+        {
+            assert(chars.length <= this._store.smallString.length);
+            this.disposeBigStringIfExists(); // Resets us to a "completely empty" state.
+            this._store.smallString[0..chars.length] = chars[0..$];
+            this._store.smallLength = cast(ubyte)chars.length;
+        }
     }
 
     @trusted
@@ -388,7 +401,7 @@ struct String
     @safe
     private bool isSmall() const
     {
-        return this._store.smallLength > 0;
+        return this._store.smallLength > 0 && UseSSO;
     }
 }
 ///
@@ -396,14 +409,14 @@ struct String
 unittest
 {
     auto s = String("Hello");
-    assert(s.isSmall); // .isSmall is a private function
+    assert(s.isSmall || !UseSSO); // .isSmall is a private function
     assert(!s.isCompletelyEmpty); // ^^^
     assert(s.length == 5);
     assert(s == "Hello");
     assert(s.ptrUnsafe[5] == '\0');
 
     auto s2 = s;
-    assert(s2.isSmall && !s2.isCompletelyEmpty);
+    assert((s2.isSmall || !UseSSO) && !s2.isCompletelyEmpty);
     assert(s2.length == 5);
     assert(s2 == "Hello");
     s2.put(", world!");
@@ -443,7 +456,7 @@ unittest
     assert(s2.sliceUnsafe is null);
     assert(s2.length == 0);
     s2.put("abc");
-    assert(s2.isSmall);
+    assert(s2.isSmall || !UseSSO);
 
     assert(s2 == "abc");
     assert(s2 == String("abc"));
@@ -452,7 +465,7 @@ unittest
     assert(s2 == null);
 
     s2 = "abc";
-    assert(s2.isSmall);
+    assert(s2.isSmall || !UseSSO);
     assert(s2 == "abc");
     assert(s2[1] == 'b');
     assert(s2[0..2] == "ab");

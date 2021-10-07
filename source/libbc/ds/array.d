@@ -56,10 +56,14 @@ struct ArrayBase(
 
     ~this()
     {
-        this.dtorValues(0, this._values.length);
+        this.dtorValues(0, this.length);
         this.allocDtor();
         if(this._values.ptr)
+        {
             this.free(this._values.ptr);
+            this._values = null;
+            this._length = 0;
+        }
     }
 
     void put(T : ValueT)(auto ref T value)
@@ -99,6 +103,14 @@ struct ArrayBase(
     {
         foreach(ref value; range)
             this.put(value);
+    }
+
+    void set(string member, T)(size_t index, auto ref T value)
+    {
+        static if(!hasElaborateMove!T)
+            mixin("this[index]."~member~" = value;");
+        else
+            mixin("move(value, this[index]."~member~");");
     }
 
     ValueT remove(size_t index)
@@ -393,6 +405,7 @@ unittest
     arr2.length = 1;
     arr2.put(10);
     assert(arr2 == [20, 10]);
+    assert(arr2.length == 2);
 
     arr2 = arr;
     assert(arr2 == [20, 30, 40]);
@@ -575,4 +588,42 @@ unittest
     i.put([3, 1, 2]);
     i.slice.sort;
     assert(i == [1, 2, 3]);
+}
+
+@("lifetime")
+unittest
+{
+    int i;
+    static struct S
+    {
+        int* i;
+        
+        @nogc nothrow:
+        this(ref return scope S s)
+        {
+            this.i = s.i;
+            (*this.i)++;
+        }
+
+        ~this()
+        {
+            if(this.i)
+                (*this.i)--;
+        }
+    }
+
+    Array!S s;
+    s.put([
+        S(&i),S(&i),S(&i)
+    ]);
+    assert(i == 3);
+    
+    s.remove(1);
+    assert(i == 2);
+
+    s.length = 1;
+    assert(i == 1);
+
+    s.__xdtor();
+    assert(i == 0);
 }
