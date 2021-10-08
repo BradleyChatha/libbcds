@@ -486,3 +486,5 @@ unittest
     s2 ~= String("in mah belleh");
     assert(s2 == "put it in mah belleh");
 }
+
+version(unittest) void runTests(){ static foreach(t; __traits(getUnitTests, __traits(parent, runTests))) t(); }

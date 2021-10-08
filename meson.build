@@ -13,10 +13,21 @@ include = include_directories('source/')
 libbcds = static_library(
     'bcds',
     srcs,
-    include_directories: include
+    include_directories: include,
+    d_args: ['-betterC']
+)
+
+libbcds_test = executable(
+    'bcds_test',
+    srcs,
+    'source/test.d',
+    include_directories: include,
+    d_args: ['-betterC', '-unittest']
 )
 
 libbcds_dep = declare_dependency(
     include_directories: include,
     sources: srcs
 )
+
+test('libbcds', libbcds_test)
