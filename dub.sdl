@@ -3,6 +3,7 @@ description "A minimal D application."
 authors "Bradley"
 copyright "Copyright © 2021, Bradley"
 license "MIT"
+excludedSourceFiles "source/test.d"
 configuration "default" {
 	targetType "library"
 }
