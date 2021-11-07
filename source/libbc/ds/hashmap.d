@@ -21,6 +21,8 @@ struct RobinHoodHashMapBase(
         private ushort psl;
         private bool isSet;
 
+        @nogc nothrow:
+
         static if(hasElaborateCopyConstructor!KeyT || hasElaborateCopyConstructor!ValueT)
         this(ref return scope Kvp kvp)
         {
@@ -43,6 +45,14 @@ struct RobinHoodHashMapBase(
             Kvp
         ) array;
         size_t length;
+
+        @nogc nothrow:
+
+        this(ref return scope Map map)
+        {
+            this.array = map.array;
+            this.length = map.length;
+        }
     }
 
     private
@@ -57,6 +67,12 @@ struct RobinHoodHashMapBase(
     this(Alloc.CtorParams params)
     {
         this._array = ArrayT(params);
+    }
+
+    this(ref return scope typeof(this) src)
+    {
+        this._map = src._map;
+        this._loadFactor = src._loadFactor;
     }
 
     void put(VT : ValueT)(KeyT key, VT value)
