@@ -75,8 +75,9 @@ struct String
         this.put(ptr[0..length]);
     }
 
-    this(this) @trusted
+    this(scope ref return String src) @trusted
     {
+        this._store = src._store;
         if(!this.isCompletelyEmpty && !this.isSmall)
         {
             auto slice = (cast(char*)malloc(this._store.bigLength+1))[0..this._store.bigLength+1]; // We'll just allocate the length and not use Growth or capacity.
