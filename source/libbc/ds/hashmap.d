@@ -87,7 +87,8 @@ struct RobinHoodHashMapBase(
 
         if(this._map.length >= this._loadFactor)
         {
-            this.moveToNewMap(GetGrowSize(this._map.length, this._map.array.length));
+            while(!this.moveToNewMap(GetGrowSize(this._map.length, this._map.array.length)))
+            {}
             this._loadFactor = GetLoadFactor(this._map.length, this._map.array.length);
         }
     }
@@ -264,7 +265,7 @@ struct RobinHoodHashMapBase(
         }
     }
 
-    void moveToNewMap(size_t newMapSize)
+    bool moveToNewMap(size_t newMapSize)
     {
         Map map;
         map.array.length = newMapSize;
@@ -275,9 +276,11 @@ struct RobinHoodHashMapBase(
             if(this._map.array[i].isSet)
                 this._put(this._map.array[i].key, this._map.array[i].value, map);
         }
-        assert(map.length == this._map.length);
+        if(map.length != this._map.length)
+            return false;
 
         move(map, this._map);
+        return true;
     }
 
     uint getHash(alias Hasher)(KeyT key)
