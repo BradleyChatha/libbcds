@@ -71,6 +71,8 @@ struct String
     this(const char* ptr)
     {
         import core.stdc.string : strlen;
+        if(!ptr)
+            return;
         const length = strlen(ptr);
         this.put(ptr[0..length]);
     }
@@ -286,11 +288,12 @@ struct String
     @property
     void length(size_t newLen)
     {
-        if(this.isSmall || this.isCompletelyEmpty)
+        if(this.isSmall && !this.isCompletelyEmpty)
         {
             if(newLen > this._store.smallString.length)
             {
                 this.moveToBigString();
+                assert(!this.isSmall);
                 this.length = newLen; // So we don't have to duplicate logic.
             }
             else
