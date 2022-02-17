@@ -106,7 +106,7 @@ struct String
         uint hash;
         MurmurHash3!32 hasher;
         hasher.start();
-        hasher.put(cast(const ubyte[])this.rangeUnsafe());
+        hasher.put(cast(const ubyte[])this.range());
         const bytes = hasher.finish();
         hash = bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3];
         return hash;
@@ -151,7 +151,7 @@ struct String
     @trusted
     void put()(scope const auto ref String str)
     {
-        this.put(str.sliceUnsafe);
+        this.put(str.slice);
     }
 
     @trusted
@@ -171,13 +171,13 @@ struct String
     @trusted
     bool opEquals(scope const(char)[] other) const
     {
-        return __equals(this.sliceUnsafe, other);
+        return __equals(this.slice, other);
     }
 
     @trusted
     bool opEquals()(scope auto ref const String other) const
     {
-        return this.sliceUnsafe == other.sliceUnsafe;
+        return this.slice == other.slice;
     }
 
     @safe
@@ -212,14 +212,14 @@ struct String
     @trusted
     const(char)[] opIndex() const
     {
-        return this.sliceUnsafe;
+        return this.slice;
     }
 
     @trusted
     char opIndex(size_t index) const
     {
         assert(index < this.length, "Index is out of bounds.");
-        return this.sliceUnsafe[index];
+        return this.slice[index];
     }
 
     @trusted // Function is @safe, further usage by user is not.
@@ -227,14 +227,14 @@ struct String
     {
         assert(end <= this.length, "End index is out of bounds.");
         assert(start <= end, "Start index is greater than End index.");
-        return this.sliceUnsafe[start..end];
+        return this.slice[start..end];
     }
 
     @trusted // HEAVILY assumes that the allocated memory is still valid. Since at the moment we always use malloc, this should be guarenteed outside of bugs in this struct.
     void opIndexAssign(char v, size_t index)
     {
         assert(index < this.length, "Index is out of bounds.");
-        cast()this.sliceUnsafe[index] = v; // cast away const is fine for internal functions like this.
+        cast()this.slice[index] = v; // cast away const is fine for internal functions like this.
     }
 
     @trusted
@@ -284,11 +284,10 @@ struct String
         this.put(rhs);
     }
 
-    alias range = rangeUnsafe; // Could probably make a safe/safer custom range in the future.
     @property
-    const(char)[] rangeUnsafe() const
+    const(char)[] range() const
     {
-        return this.sliceUnsafe;
+        return this.slice;
     }
 
     @property @safe
@@ -326,13 +325,13 @@ struct String
     }
 
     @property
-    const(char)* ptrUnsafe() const return
+    const(char)* ptr() const return
     {
         return (this.isSmall) ? &this._store.smallString[0] : this._store.bigPtr;
     }
 
     @property
-    const(char)[] sliceUnsafe() const return
+    const(char)[] slice() const return
     {
         return (this.isSmall) ? this._store.smallString[0..this._store.smallLength] : this._store.bigPtr[0..this._store.bigLength];
     }
@@ -428,7 +427,7 @@ unittest
     assert(!s.isCompletelyEmpty); // ^^^
     assert(s.length == 5);
     assert(s == "Hello");
-    assert(s.ptrUnsafe[5] == '\0');
+    assert(s.ptr[5] == '\0');
 
     auto s2 = s;
     assert((s2.isSmall || !UseSSO) && !s2.isCompletelyEmpty);
@@ -438,13 +437,13 @@ unittest
     assert(s2.length == 13);
     assert(s.length == 5);
     assert(s2 == "Hello, world!");
-    assert(s2.ptrUnsafe[13] == '\0');
+    assert(s2.ptr[13] == '\0');
 
     s = String("This is a big string that is bigger than 22 characters long!");
     assert(!s.isSmall);
     assert(s.length == 60);
     assert(s == "This is a big string that is bigger than 22 characters long!");
-    assert(s.ptrUnsafe[60] == '\0');
+    assert(s.ptr[60] == '\0');
 
     s2 = s;
     assert(!s2.isSmall);
@@ -453,22 +452,22 @@ unittest
     s.__xdtor();
     s2.put("This shouldn't crash because we copied things.");
     assert(s2 == "This is a big string that is bigger than 22 characters long!This shouldn't crash because we copied things.");
-    assert(s2.ptrUnsafe[s2.length] == '\0');
+    assert(s2.ptr[s2.length] == '\0');
 
     s2.length = 60;
     assert(s2.length == 60);
     assert(s2 == "This is a big string that is bigger than 22 characters long!");
-    assert(s2.ptrUnsafe[60] == '\0');
+    assert(s2.ptr[60] == '\0');
 
     s2.length = 61;
     assert(s2 == "This is a big string that is bigger than 22 characters long!"~char.init);
-    assert(s2.ptrUnsafe[61] == '\0');
+    assert(s2.ptr[61] == '\0');
 
     // Making sure we don't crash when using any of these things from a .init state.
     s2.__xdtor();
     assert(!s2.isSmall && s2.isCompletelyEmpty);
-    assert(s2.ptrUnsafe is null);
-    assert(s2.sliceUnsafe is null);
+    assert(s2.ptr is null);
+    assert(s2.slice is null);
     assert(s2.length == 0);
     s2.put("abc");
     assert(s2.isSmall || !UseSSO);
