@@ -287,7 +287,7 @@ struct RobinHoodHashMapBase(
     {
         uint hash;
         static if(__traits(hasMember, KeyT, "toHash"))
-            hash = value.toHash();
+            hash = key.toHash();
         else
         {
             Hasher hasher;
@@ -394,31 +394,28 @@ unittest
 @("stress")
 unittest
 {
-    HashMap!(string, int) map;
+    HashMap!(int, int) map;
 
     // If this test is failing, compile with LDC2
     // I think I'm hitting a super strange DMD codegen bug
-    // foreach(i; 0..100_000)
-    // {
-    //     const n = i.to!string;
-    //     map.put(n, i);
-    // }
+    foreach(i; 0..100_000)
+    {
+        map.put(i, i);
+    }
 
-    // foreach(i; 0..100_000)
-    // {
-    //     const n = i.to!string;
-    //     bool b;
-    //     assert(map.tryGet(n, b) == i);
-    //     assert(b);
-    // }
+    foreach(i; 0..100_000)
+    {
+        bool b;
+        assert(map.tryGet(i, b) == i);
+        assert(b);
+    }
         
-    // foreach(i; 0..100_000)
-    // {
-    //     const n = i.to!string;
-    //     bool b;
-    //     map.tryRemove(n, b);
-    //     assert(b, n);
-    // }
+    foreach(i; 0..100_000)
+    {
+        bool b;
+        map.tryRemove(i, b);
+        assert(b);
+    }
 }
 
 @("copyable types")
@@ -520,4 +517,17 @@ unittest
     map.put("abc", 123);
 
     assert(map.byKeyValue.front.key == "abc");
+}
+
+@("String key and value")
+unittest
+{
+    import libbc.ds.string;
+
+    HashMap!(String, String) map;
+    map.put(String("abc"), String("123"));
+    assert(map.get(String("abc"), String.init) == String("123"));
+    assert(map.get(String("doe ray me"), String.init) == String.init);
+    map.put(String("abc"), String("321"));
+    assert(map.get(String("abc"), String.init) == String("321"));
 }

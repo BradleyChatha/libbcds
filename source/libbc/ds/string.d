@@ -99,6 +99,20 @@ struct String
     }
 
     @trusted
+    uint toHash()
+    {
+        import std.digest.murmurhash;
+
+        uint hash;
+        MurmurHash3!32 hasher;
+        hasher.start();
+        hasher.put(cast(const ubyte[])this.rangeUnsafe());
+        const bytes = hasher.finish();
+        hash = bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3];
+        return hash;
+    }
+
+    @trusted
     void putMany(Params...)(scope Params params)
     {
         foreach(param; params)
