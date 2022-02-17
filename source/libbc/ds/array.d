@@ -112,12 +112,12 @@ struct ArrayBase(
             this.put(value);
     }
 
-    void set(string member, T)(size_t index, auto ref T value)
+    void move(string member, T)(size_t index, auto ref T value)
     {
         static if(!hasElaborateMove!T)
             mixin("this[index]."~member~" = value;");
         else
-            mixin("move(value, this[index]."~member~");");
+            mixin(".move(value, this[index]."~member~");");
     }
 
     ValueT remove(size_t index)
@@ -174,7 +174,7 @@ struct ArrayBase(
     {
         assert(index < this._length, "Index out of bounds");
         static if(hasElaborateMove!T)
-            move(value, this._values[index]);
+            .move(value, this._values[index]);
         else
             this._values[index] = value;
     }
@@ -192,7 +192,7 @@ struct ArrayBase(
         foreach(i, ref v; this._values[slice.start..slice.end])
         {
             static if(hasElaborateMove!T)
-                move(values[i], v);
+                .move(values[i], v);
             else
                 v = values[i];
         }

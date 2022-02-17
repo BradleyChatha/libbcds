@@ -119,8 +119,8 @@ struct RobinHoodHashMapBase(
 
         while(index != startIndex && this._map.array[index].isSet && this._map.array[index].psl != 0)
         {
-            this._map.array.set!"key"(prevIndex, this._map.array[index].key);
-            this._map.array.set!"value"(prevIndex, this._map.array[index].value);
+            this._map.array.move!"key"(prevIndex, this._map.array[index].key);
+            this._map.array.move!"value"(prevIndex, this._map.array[index].value);
             this._map.array[prevIndex].psl = cast(ushort)(this._map.array[index].psl - 1);
             this._map.array[prevIndex].isSet = true;
             this._map.array[index].isSet = false;
@@ -319,14 +319,14 @@ struct RobinHoodHashMapBase(
             {
                 ptr.isSet = true;
                 ptr.psl = psl;
-                map.array.set!"key"(index, key);
-                map.array.set!"value"(index, value);
+                map.array.move!"key"(index, key);
+                map.array.move!"value"(index, value);
                 map.length++;
                 return;
             }
             else if(ptr.key == key)
             {
-                map.array.set!"value"(index, value);
+                map.array.move!"value"(index, value);
                 return;
             }
             else if(ptr.psl < psl)
@@ -334,8 +334,8 @@ struct RobinHoodHashMapBase(
                 auto tempKey = ptr.key;
                 auto tempValue = ptr.value;
                 auto tempPsl = ptr.psl;
-                map.array.set!"key"(index, key);
-                map.array.set!"value"(index, value);
+                map.array.move!"key"(index, key);
+                map.array.move!"value"(index, value);
                 ptr.psl = psl;
                 key = tempKey;
                 value = tempValue;
