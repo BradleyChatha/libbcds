@@ -226,7 +226,13 @@ struct RobinHoodHashMapBase(
                     return;
                 }
 
-                while(!this.map.array[this.cursor++].isSet) {}
+                while(this.cursor < this.map.array.length && !this.map.array[this.cursor++].isSet) {}
+                if(this.cursor > this.map.array.length)
+                {
+                    this.empty = true;
+                    return;
+                }
+
                 this.front = &this.map.array[this.cursor-1];
             }
         }
