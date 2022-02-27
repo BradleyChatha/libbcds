@@ -299,7 +299,10 @@ struct RobinHoodHashMapBase(
             Hasher hasher;
             hasher.start();
             static if(is(KeyT : Key[], Key))
-                hasher.put(cast(ubyte[])(&key[0])[0..Key.sizeof*key.length]);
+            {
+                if(key.length)
+                   hasher.put(cast(ubyte[])(&key[0])[0..Key.sizeof*key.length]);
+            }
             else
                 hasher.put(cast(ubyte[])(&key)[0..1]);
             const bytes = hasher.finish();
